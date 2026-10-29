@@ -7,12 +7,12 @@ A PQ4R study plan for the AFP FPAC exam (February 26, 2027) that re-plans your d
 - `index.html` is the app
 - `manifest.webmanifest` holds the app name, colors and icons
 - `sw.js` lets the app open without internet
-- `icons/` holds the bunny icons
+- the four `.png` files are the bunny icons
 
 ## Put it online with GitHub Pages
 
 1. On github.com, create a new **public** repository named `fpac-planner`.
-2. Click **uploading an existing file** and drag in `index.html`, `manifest.webmanifest`, `sw.js`, `README.md` and the whole `icons` folder. Click **Commit changes**.
+2. Click **uploading an existing file** and drag in `index.html`, `manifest.webmanifest`, `sw.js`, `README.md` and the four icon images (`icon-192.png`, `icon-512.png`, `maskable-512.png`, `apple-touch-icon.png`). Click **Commit changes**.
 3. Go to **Settings > Pages**. Under **Branch**, choose `main` and `/ (root)`, then **Save**.
 4. After a minute or two, the page shows your link: `https://YOUR-USERNAME.github.io/fpac-planner/`
 

@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#D9ECFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1A2C" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>FPAC Study Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+/* Layout: sticker-style study desk on a polka-dot sky-blue ground with a bunny mascot. Summary strip on top, today's session on the left, the syllabus on the right. */
+:root{
+  --bg:#D9ECFF; --dot:#C2DDFB; --surface:#F6FAFF; --surface-2:#E3F0FF; --ink:#1C2F4D; --muted:#4A6188; --line:#B3D0F0; --outline:#2C4A75;
+  --accent:#7DBDF7; --accent-deep:#3D8EE0; --accent-soft:#E3F0FF; --accent-ink:#10264A; --face:#2C3A55; --blush:#FFB3C7;
+  --good:#1FA67E; --good-soft:#C6F1E0; --warn:#E8456F; --warn-soft:#FFD6E2; --bad:#E8456F; --bad-soft:#FFD6E2;
+  --ovu:#6F58EA; --ovu-soft:#DCD6FF; --sun:#7DBDF7; --bunny:#FFFFFF; --ear:#FFC2D4;
+  --f-display:"Fredoka","Baloo 2",ui-rounded,"Trebuchet MS",sans-serif;
+  --f-body:"Nunito",ui-rounded,"Segoe UI",system-ui,sans-serif;
+  --f-mono:"Fredoka",ui-rounded,"Trebuchet MS",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1A2C; --dot:#16253C; --surface:#172740; --surface-2:#1F3352; --ink:#E3EEFF; --muted:#9EB6DA; --line:#2B4468; --outline:#55779F;
+  --accent:#8CC6FF; --accent-deep:#5AA8F2; --accent-soft:#1F3352; --accent-ink:#0B1A30; --face:#2C3A55; --blush:#FF9DB8;
+  --good:#4FD3AB; --good-soft:#1F4B3E; --warn:#FF7C9E; --warn-soft:#5F2B3D; --bad:#FF7C9E; --bad-soft:#5F2B3D;
+  --ovu:#A99CFF; --ovu-soft:#3D3573; --sun:#8CC6FF; --bunny:#F2F6FF; --ear:#F7A9C0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1A2C; --dot:#16253C; --surface:#172740; --surface-2:#1F3352; --ink:#E3EEFF; --muted:#9EB6DA; --line:#2B4468; --outline:#55779F;
+  --accent:#8CC6FF; --accent-deep:#5AA8F2; --accent-soft:#1F3352; --accent-ink:#0B1A30; --face:#2C3A55; --blush:#FF9DB8;
+  --good:#4FD3AB; --good-soft:#1F4B3E; --warn:#FF7C9E; --warn-soft:#5F2B3D; --bad:#FF7C9E; --bad-soft:#5F2B3D;
+  --ovu:#A99CFF; --ovu-soft:#3D3573; --sun:#8CC6FF; --bunny:#F2F6FF; --ear:#F7A9C0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(26px,4vw,36px);font-weight:700}
+h2{font-size:19px;font-weight:700}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+header p{margin:4px 0 0;color:var(--muted)}
+.sync{font-size:12.5px;color:var(--muted)}
+.strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.stat{padding:14px 16px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat:last-child{border-right:0}
+.stat .v{font-family:var(--f-display);font-size:26px;font-weight:700;line-height:1.15}
+.stat .s{font-size:13px;color:var(--muted)}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.banner{padding:10px 14px;border-radius:8px;font-size:14px;display:flex;gap:10px;align-items:flex-start}
+.banner.warn{background:var(--warn-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent)}
+.banner.good{background:var(--good-soft);border:1px solid color-mix(in srgb,var(--good) 35%,transparent)}
+.banner b{font-weight:700}
+.grid{display:grid;grid-template-columns:340px minmax(0,1fr);gap:20px;align-items:start}
+.side{display:flex;flex-direction:column;gap:20px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.today-list{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.today-list li{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:10px 12px;border-radius:12px;background:var(--accent-soft);font-size:14px}
+.today-list li span:first-child{min-width:0}
+.today-list small{display:block;color:var(--muted);font-size:12px}
+.empty{color:var(--muted);font-size:14px;margin:0}
+.upnext{font-size:13.5px;color:var(--muted);margin:0}
+form.settings{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+form.settings label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted);font-weight:600}
+form.settings .full{grid-column:1/-1}
+input[type=number],input[type=date]{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;width:100%}
+.days{display:flex;gap:4px;flex-wrap:wrap}
+.days button{font:inherit;font-size:12.5px;font-weight:600;width:38px;padding:5px 0;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--muted);cursor:pointer}
+.days button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.hint{font-size:12.5px;color:var(--muted);margin:0}
+.chapter{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.ch-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;background:none;border:0;width:100%;text-align:left;font:inherit;color:inherit}
+.ch-head:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.ch-title{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ch-meta{font-size:13px;color:var(--muted)}
+.ch-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.ring{--p:0;width:40px;height:40px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p)*1%),var(--line) 0);display:grid;place-items:center}
+.ring span{width:30px;height:30px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-size:10.5px;font-family:var(--f-mono);font-weight:600}
+.chev{transition:transform .2s;color:var(--muted)}
+.chapter.open .chev{transform:rotate(90deg)}
+.items{border-top:1px solid var(--line)}
+.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 14px;padding:12px 16px;border-bottom:1px solid var(--line);align-items:center}
+.item:last-child{border-bottom:0}
+.item.is-done{background:color-mix(in srgb,var(--good-soft) 55%,transparent)}
+.item.is-unsure{background:color-mix(in srgb,var(--warn-soft) 60%,transparent)}
+.it-name{font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.it-sub{font-size:12.5px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;margin-top:2px}
+.pill{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:99px;white-space:nowrap}
+.pill.done{background:var(--good-soft);color:var(--good)}
+.pill.unsure{background:var(--warn-soft);color:var(--warn)}
+.pill.prog{background:var(--accent-soft);color:var(--ink)}
+.pill.late{background:var(--bad-soft);color:var(--bad)}
+.target{font-family:var(--f-mono);font-size:12.5px;text-align:right;white-space:nowrap}
+.target small{display:block;color:var(--muted);font-family:var(--f-body);font-size:11px}
+.steps{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.step{font:inherit;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--bg);color:var(--muted);cursor:pointer;display:inline-flex;gap:5px;align-items:center}
+.step[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.step .k{font-family:var(--f-mono);font-size:11px;opacity:.8}
+.acts{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.btn{font:inherit;font-size:13px;font-weight:700;padding:5px 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.ok{border-color:var(--good);color:var(--good)}
+.btn.ok:hover{background:var(--good-soft)}
+.btn.unsure{border-color:var(--warn);color:var(--warn)}
+.btn.unsure:hover{background:var(--warn-soft)}
+.btn.ghost{border-color:transparent;color:var(--muted)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.score{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.score input{width:70px;padding:3px 6px}
+.ph{padding:12px 16px;color:var(--muted);font-size:14px;border:1px dashed var(--line);border-radius:10px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.chapters{display:flex;flex-direction:column;gap:12px;min-width:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}.side{position:static}.strip{grid-template-columns:repeat(2,minmax(0,1fr))}.stat:nth-child(2){border-right:0}.stat:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+@media (max-width:480px){.item{grid-template-columns:minmax(0,1fr)}.target{text-align:left}.acts{margin-left:0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* ---- Sunny sticker theme ---- */
+body{background-color:var(--bg);background-image:radial-gradient(var(--dot) 2.2px,transparent 2.8px);background-size:28px 28px;font-size:16px}
+.titlerow{display:flex;align-items:center;gap:10px}
+.mascot{width:72px;height:72px;flex:none}
+.ear{transform-box:fill-box;transform-origin:50% 100%}
+.ear-l{animation:wiggleL 4s ease-in-out infinite}
+.ear-r{animation:wiggleR 4s ease-in-out infinite}
+@keyframes wiggleL{0%,80%,100%{transform:rotate(0)}88%{transform:rotate(-10deg)}}
+@keyframes wiggleR{0%,84%,100%{transform:rotate(0)}92%{transform:rotate(10deg)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sync{background:var(--surface);border:2px solid var(--outline);border-radius:999px;padding:4px 12px;font-weight:800;color:var(--muted)}
+.panel,.chapter,.strip{background:var(--surface);border:2.5px solid var(--outline);border-radius:24px;box-shadow:0 4px 0 var(--outline)}
+.stat{border-color:var(--line);border-right-width:2px;border-right-style:dashed}
+.stat .v{font-weight:700}
+.bar{height:12px;border-radius:999px}
+.bar i{background:var(--accent-deep);border-radius:999px}
+.banner{border-radius:18px;border:2.5px solid var(--outline)!important;font-weight:700}
+.banner.warn{background:var(--warn-soft)}
+.banner.good{background:var(--good-soft)}
+.today-list li{background:var(--surface-2);border:2px solid var(--line);border-radius:18px;font-weight:700}
+.btn{border-radius:16px;border:2.5px solid var(--outline);box-shadow:0 3px 0 var(--outline);font-family:var(--f-display);font-weight:600;background:var(--surface)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--outline)}
+.btn.ok{background:var(--accent);color:var(--accent-ink);border-color:var(--outline)}
+.btn.ok:hover{background:var(--accent-deep)}
+.btn.unsure{background:var(--warn-soft);color:var(--ink);border-color:var(--outline)}
+.btn.unsure:hover{background:var(--warn-soft);filter:brightness(.97)}
+.btn.ghost{box-shadow:none;border-color:transparent;background:transparent}
+.step,.days button{border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font-weight:800}
+.step[aria-pressed=true],.days button[aria-pressed=true]{background:var(--accent);border-color:var(--outline);color:var(--accent-ink)}
+.pill{font-family:var(--f-display);font-weight:600;font-size:12px;letter-spacing:0;text-transform:none;border:2px solid var(--outline);padding:1px 10px}
+.pill.done{background:var(--good-soft);color:var(--ink)}
+.pill.unsure{background:var(--warn);color:#fff}
+.pill.prog{background:var(--ovu-soft);color:var(--ink)}
+.item{border-bottom:2px dashed var(--line)}
+.items{border-top:2.5px solid var(--outline)}
+.item.is-done{background:color-mix(in srgb,var(--good-soft) 60%,transparent)}
+.item.is-unsure{background:color-mix(in srgb,var(--warn-soft) 70%,transparent)}
+.ring{width:46px;height:46px;background:conic-gradient(var(--accent-deep) calc(var(--p)*1%),var(--line) 0);border:2px solid var(--outline)}
+.ring span{width:32px;height:32px;font-family:var(--f-display);font-size:11.5px}
+input[type=number],input[type=date]{background:var(--surface-2);border:2px solid var(--outline);border-radius:12px;font-weight:700}
+.ph{border:2.5px dashed var(--outline);border-radius:20px;background:var(--surface)}
+.eyebrow{font-weight:800}
+.modes button{width:auto;padding:6px 12px}
+.donedate{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.donedate small{order:-1}
+.donedate input{width:auto;font-size:13px;padding:3px 8px}
+@media (max-width:480px){.donedate{align-items:flex-start}}
+.bklabel{font-size:12.5px;font-weight:800;color:var(--muted)}
+textarea{font:inherit;font-size:12.5px;width:100%;color:var(--ink);background:var(--surface-2);border:2px solid var(--outline);border-radius:12px;padding:8px 10px;resize:vertical}
+.view{display:flex;flex-direction:column;gap:20px}
+.wrap{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px;align-items:start}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;justify-content:center;background:var(--surface);border-top:2.5px solid var(--outline);padding:8px max(12px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.tabbar-in{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:420px}
+.tab{font:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border-radius:16px;border:2px solid transparent;background:none;font-size:12.5px;font-weight:800;color:var(--muted);cursor:pointer}
+.tab[aria-current="page"]{background:var(--accent);border-color:var(--outline);color:var(--accent-ink)}
+@media (prefers-reduced-motion:reduce){.ear{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">AFP FPAC · PQ4R study plan</div>
+      <div class="titlerow"><svg class="mascot" viewBox="0 0 120 120" aria-hidden="true"><g class="ear ear-l"><ellipse cx="44" cy="30" rx="11" ry="26" fill="var(--bunny)" stroke="var(--outline)" stroke-width="3.5"/><ellipse cx="44" cy="32" rx="5" ry="17" fill="var(--ear)"/></g><g class="ear ear-r"><ellipse cx="76" cy="30" rx="11" ry="26" fill="var(--bunny)" stroke="var(--outline)" stroke-width="3.5"/><ellipse cx="76" cy="32" rx="5" ry="17" fill="var(--ear)"/></g><ellipse cx="60" cy="78" rx="36" ry="31" fill="var(--bunny)" stroke="var(--outline)" stroke-width="3.5"/><ellipse cx="40" cy="86" rx="7" ry="4.5" fill="var(--blush)"/><ellipse cx="80" cy="86" rx="7" ry="4.5" fill="var(--blush)"/><circle cx="47" cy="75" r="4.2" fill="var(--face)"/><circle cx="73" cy="75" r="4.2" fill="var(--face)"/><circle cx="48.5" cy="73.5" r="1.5" fill="#fff"/><circle cx="74.5" cy="73.5" r="1.5" fill="#fff"/><path d="M56.5 82 h7 l-3.5 4 z" fill="var(--ear)" stroke="var(--face)" stroke-width="1.6" stroke-linejoin="round"/><path d="M60 86 v3 M60 89 q-4 4 -8 1 M60 89 q4 4 8 1" fill="none" stroke="var(--face)" stroke-width="2.4" stroke-linecap="round"/></svg><h1>FPAC Study Planner</h1></div>
+      <p id="examLine">Exam on Feb 26, 2027</p>
+    </div>
+    <div class="sync" id="sync">Loading your progress…</div>
+  </header>
+
+  <div id="view-plan" class="view">
+  <section class="strip" aria-label="Summary">
+    <div class="stat"><span class="eyebrow">Material done</span><span class="v mono" id="sPct">0%</span><div class="bar"><i id="sBar" style="width:0"></i></div></div>
+    <div class="stat"><span class="eyebrow">Days to exam</span><span class="v mono" id="sDays">–</span><span class="s" id="sStudyDays"></span></div>
+    <div class="stat"><span class="eyebrow">Chapters finished</span><span class="v mono" id="sFinish">–</span><span class="s" id="sFinishSub"></span></div>
+    <div class="stat"><span class="eyebrow" id="sPaceLabel">Pace needed</span><span class="v mono" id="sPace">–</span><span class="s" id="sPaceSub"></span></div>
+  </section>
+
+  <div id="banner"></div>
+
+  <div class="grid">
+    <aside class="side">
+      <section class="panel" aria-labelledby="todayH">
+        <div><div class="eyebrow" id="todayDate">Today</div><h2 id="todayH">Today's session</h2><p class="upnext" id="todaySum" style="margin-top:4px"></p></div>
+        <ul class="today-list" id="todayList"></ul>
+        <p class="upnext" id="upNext"></p>
+      </section>
+
+    </aside>
+
+    <main class="chapters" id="chapters" aria-label="Syllabus"></main>
+  </div>
+  </div>
+  <div id="view-settings" class="view" hidden>
+    <div><div class="eyebrow">Your plan updates as soon as you change anything here</div><h2 style="font-size:24px">Settings</h2></div>
+    <div class="settings-grid">
+      <section class="panel" aria-labelledby="setH">
+        <h2 id="setH">Plan settings</h2>
+        <form class="settings" id="settings" onsubmit="return false">
+          <label>Exam date<input type="date" id="exam"></label>
+          <label>Final review (days)<input type="number" id="review" min="0" max="60"></label>
+          <label>Minutes I can study per day<input type="number" id="minutes" min="15" max="600" step="5"></label>
+          <label>Minutes per knowledge point<input type="number" id="kpMin" min="1" max="30" step="0.5"></label>
+          <div class="full"><div class="eyebrow" style="margin-bottom:6px">How dates are set</div><div class="days modes" id="modes"><button type="button" data-m="fit">Fit my exam date</button><button type="button" data-m="pace">My daily pace</button></div></div>
+          <label class="full" hidden>Chapters not added yet<input type="number" id="future" min="0" max="40"></label>
+          <div class="full"><div class="eyebrow" style="margin-bottom:6px">Study days</div><div class="days" id="days"></div></div>
+        </form>
+        <p class="hint">Lessons are sized by knowledge points with the full PQ4R cycle. Raise minutes per knowledge point if lessons take you longer. "Fit my exam date" spreads what's left evenly so you finish before the final review. "My daily pace" uses your minutes per day and shows the finish date that gives.</p>
+      </section>
+      <section class="panel" aria-labelledby="bkH">
+        <h2 id="bkH">Backup</h2>
+        <p class="hint">Your progress lives only on this phone. Copy a backup now and then and keep it in a private note.</p>
+        <label class="bklabel" for="backupText">Your backup text</label>
+        <textarea id="backupText" readonly rows="3"></textarea>
+        <button type="button" class="btn ok" id="copyBk">Copy backup</button>
+        <label class="bklabel" for="restoreText">Restore from a backup</label>
+        <textarea id="restoreText" rows="3" placeholder="Paste backup text here"></textarea>
+        <button type="button" class="btn" id="restoreBk">Replace my progress</button>
+        <p class="hint" id="bkMsg" role="status"></p>
+      </section>
+    </div>
+  </div>
+</div>
+<nav class="tabbar" aria-label="Pages">
+  <div class="tabbar-in">
+    <button type="button" class="tab" data-view="plan" aria-current="page"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="4"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h3"/></svg>My plan</button>
+    <button type="button" class="tab" data-view="settings"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h9M17 8h3M4 16h3M11 16h9"/><circle cx="15" cy="8" r="2"/><circle cx="9" cy="16" r="2"/></svg>Settings</button>
+  </div>
+</nav>
+
+<script>
+/* ---------- Syllabus (from the AFP Learning System screenshots) ---------- */
+const SYLLABUS = [
+  {n:1,title:"Chapter 1",items:[
+    ["r","Introduction to Chapter 1",1],["r","Topic 1: Roles of FP&A Professionals",3],["r","Topic 2: Gathering and Interpreting Information",2],
+    ["r","Topic 3: Organizational Structure",6],["r","Topic 4: Organizational Culture",5],["r","Topic 5: Stakeholders and Partners",2],
+    ["r","Topic 6: Measuring Organizational Performance",11],["r","Topic 7: Sources of Organizational Information",7],["r","Summary of Chapter 1",1],
+    ["f","Chapter 1 Flashcards",52],["q","Chapter 1 Quiz",46]]},
+  {n:2,title:"FP&A's Role in Organizational Strategy",items:[
+    ["r","Introduction to Chapter 2",1],["r","Topic 1: Strategy and the FP&A Function",5],["r","Topic 2: Industry Attributes",10],
+    ["r","Topic 3: Strategic Planning Framework",19],["r","Summary of Chapter 2",1],["f","Chapter 2 Flashcards",56],["q","Chapter 2 Quiz",32]]},
+  {n:3,title:"The Economic Environment",items:[
+    ["r","Introduction to Chapter 3",1],["r","Topic 1: Microeconomic Analysis",9],["r","Topic 2: The Macro-Environment",5],
+    ["r","Topic 3: Macroeconomic Analysis",9],["r","Summary of Chapter 3",1],["f","Chapter 3 Flashcards",68],["q","Chapter 3 Quiz",30]]},
+  {n:4,title:"Introduction to Financial Accounting",items:[
+    ["r","Introduction to Chapter 4",1],["r","Topic 1: Financial Accounting Terms",3],["r","Topic 2: Financial Accounting Concepts and Standards",8],
+    ["r","Topic 3: The Accounting Cycle",9],["r","Topic 4: FP&A Professionals and the Accounting Close",1],["r","Summary of Chapter 4",1],
+    ["f","Chapter 4 Flashcards",120],["q","Chapter 4 Quiz",36]]},
+  {n:5,title:"Understanding Financial Statements",items:[
+    ["r","Introduction to Chapter 5",2],["r","Topic 1: Income Statement",12],["r","Topic 2: Balance Sheet",12],["r","Topic 3: Statement of Cash Flows",5],
+    ["r","Topic 4: Financial Statement Interactions",3],["r","Topic 5: Business Drivers and Financial Statements",1],["r","Topic 6: Supplemental Documentation",4],
+    ["r","Summary of Chapter 5",1],["f","Chapter 5 Flashcards",138],["q","Chapter 5 Quiz",44]]},
+  {n:6,title:"Fundamentals of Managerial & Cost Accounting",items:[
+    ["r","Introduction to Chapter 6",1],["r","Topic 1: Cost Accounting Concepts",5],["r","Topic 2: Classifying Costs",5],["r","Topic 3: Headcount Analysis and Projection",5],
+    ["r","Topic 4: Cost Behavior",3],["r","Topic 5: Cost-Volume-Profit Analysis",5],["r","Summary of Chapter 6",1],["f","Chapter 6 Flashcards",78],["q","Chapter 6 Quiz",40]]},
+  {n:7,title:"Principles of Corporate Finance",items:[
+    ["r","Introduction to Chapter 7",1],["r","Topic 1: Corporate Finance Activities",13],["r","Topic 2: Time Value of Money",16],["r","Topic 3: Weighted Average Cost of Capital",11],
+    ["r","Topic 4: Cash Flow Estimation and Valuation",9],["r","Summary of Chapter 7",1],["f","Chapter 7 Flashcards",64],["q","Chapter 7 Quiz",30]]},
+  {n:8,title:"Capital Budgeting",items:[
+    ["r","Introduction to Chapter 8",1],["r","Topic 1: Capital Budgeting Process",4],["r","Topic 2: Capital Budgeting Metrics",15],["r","Topic 3: Capital Budgeting with Multiple Capital Investments",12],
+    ["r","Topic 4: Evaluating Strategic Financial Decisions",9],["r","Topic 5: Models for Customer Analysis and Projections",8],["r","Summary of Chapter 8",1],["f","Chapter 8 Flashcards",52],["q","Chapter 8 Quiz",38]]},
+  {n:9,title:"Working Capital Management",items:[
+    ["r","Introduction to Chapter 9",1],["r","Topic 1: Linking Working Capital to Cash",2],["r","Topic 2: Types of Float",6],["r","Topic 3: Working Capital Metrics",11],
+    ["r","Topic 4: Current Asset Investing and Financing Strategies",5],["r","Topic 5: Financing Options for Current Assets",12],["r","Summary of Chapter 9",1],["f","Chapter 9 Flashcards",80],["q","Chapter 9 Quiz",34]]},
+  {n:10,title:"Financial Statement Analysis",items:[
+    ["r","Introduction to Chapter 10",1],["r","Topic 1: Using Financial Ratios to Analyze Financial Statements",4],["r","Topic 2: Liquidity Ratios",2],["r","Topic 3: Leverage Ratios",9],
+    ["r","Topic 4: Activity Ratios",5],["r","Topic 5: Profitability Ratios and Performance Measures",10],["r","Topic 6: Market Ratios",4],["r","Topic 7: Benchmarking Financial Ratios",2],
+    ["r","Summary of Chapter 10",1],["f","Chapter 10 Flashcards",40],["q","Chapter 10 Quiz",40]]},
+  {n:11,title:"Sales & Revenue Projections",items:[
+    ["r","Introduction to Chapter 11",1],["r","Topic 1: Forecasting Methods",4],["r","Topic 2: Trend Analysis",8],["r","Topic 3: Smoothing Techniques",3],
+    ["r","Topic 4: Assessing Model Fit",1],["r","Topic 5: Seasonality in Revenue",4],["r","Summary of Chapter 11",1],["f","Chapter 11 Flashcards",30],["q","Chapter 11 Quiz",30]]},
+  {n:12,title:"Financial Statement Projections",items:[
+    ["r","Introduction to Chapter 12",2],["r","Topic 1: Projecting the Income Statement",11],["r","Topic 2: Projecting the Balance Sheet",7],["r","Topic 3: Projecting the Statement of Cash Flows",2],
+    ["r","Summary of Chapter 12",1],["f","Chapter 12 Flashcards",6],["q","Chapter 12 Quiz",22]]},
+  {n:13,title:"Budgeting & Variance Analysis",items:[
+    ["r","Introduction to Chapter 13",1],["r","Topic 1: Overview of Budgets",6],["r","Topic 2: Developing a Master Budget",9],["r","Topic 3: Variance Analysis",15],
+    ["r","Summary of Chapter 13",1],["f","Chapter 13 Flashcards",32],["q","Chapter 13 Quiz",24]]},
+  {n:14,title:"Risk Management Analysis & Tools",items:[
+    ["r","Introduction to Chapter 14",1],["r","Topic 1: Fundamentals of Risk",4],["r","Topic 2: Enterprise Risk Management",10],["r","Topic 3: Risk Exposures",12],
+    ["r","Topic 4: Techniques Used to Measure Risk",6],["r","Topic 5: Financial Risk Management",12],["r","Topic 6: Managing Insurable Risks",7],
+    ["r","Topic 7: Disaster Recovery and Business Continuity Planning",2],["r","Summary of Chapter 14",1],["f","Chapter 14 Flashcards",66],["q","Chapter 14 Quiz",36]]},
+  {n:15,title:"Spreadsheet Functions",items:[
+    ["r","Introduction to Chapter 15",1],["r","Topic 1: Basic Spreadsheet Functions",18],["r","Topic 2: Spreadsheet Documentation",5],["r","Topic 3: Spreadsheet Validation",13],
+    ["r","Topic 4: Value Lookups, MATCH, OFFSET, INDEX and List Validate",10],["r","Topic 5: Pivot Tables",15],["r","Topic 6: Financial Functions",10],
+    ["r","Topic 7: Common Statistical Functions",6],["r","Topic 8: Macros and User Forms",5],["r","Topic 9: Spreadsheet Sharing and Team Collaboration",12],
+    ["r","Summary of Chapter 15",1],["f","Chapter 15 Flashcards",8],["q","Chapter 15 Quiz",44]]},
+  {n:16,title:"Model Building",items:[
+    ["r","Introduction to Chapter 16",1],["r","Topic 1: Conceptualize and Scope an Analysis",12],["r","Topic 2: Gather Data and Assumptions",3],["r","Topic 3: Model Development",7],
+    ["r","Topic 4: Ensuring Quality Model Development",8],["r","Topic 5: Interpret Model Output and Form Conclusions",3],
+    ["r","Topic 6: Incorporating Risk Analysis into the Model Development",7],["r","Summary of Chapter 16",1],["f","Chapter 16 Flashcards",44],["q","Chapter 16 Quiz",36]]},
+  {n:17,title:"Working with Data",items:[
+    ["r","Introduction to Chapter 17",1],["r","Topic 1: Business Intelligence Systems",6],["r","Topic 2: Introduction to Databases",10],["r","Topic 3: ERP and GL Systems",5],
+    ["r","Topic 4: Review of Data",5],["r","Topic 5: Identify Outliers",13],["r","Topic 6: Check for Bias",11],["r","Topic 7: Data Protection",7],
+    ["r","Summary of Chapter 17",1],["f","Chapter 17 Flashcards",80],["q","Chapter 17 Quiz",42]]},
+  {n:18,title:"Data Presentation & Visualization",items:[
+    ["r","Introduction to Chapter 18",1],["r","Topic 1: The Importance of Presentation and Visualization",1],["r","Topic 2: Making Spreadsheets and Tables Visually Effective",8],
+    ["r","Topic 3: Graphs - Their Basic Purpose and The Four Questions",30],["r","Topic 4: Dashboards",1],["r","Summary of Chapter 18",1],["f","Chapter 18 Flashcards",28],["q","Chapter 18 Quiz",26]]},
+  {n:19,title:"Managing FP&A Projects",items:[
+    ["r","Introduction to Chapter 19",1],["r","Topic 1: Project Management Framework",3],["r","Topic 2: Initiate Project",3],["r","Topic 3: Plan Project",15],
+    ["r","Topic 4: Implement Project",7],["r","Topic 5: Monitor Project",1],["r","Topic 6: Close Project",2],["r","Summary of Chapter 19",1],["f","Chapter 19 Flashcards",28],["q","Chapter 19 Quiz",34]]},
+  {n:20,title:"Effective Communication & Presentation Skills",items:[
+    ["r","Introduction to Chapter 20",1],["r","Topic 1: Demystifying Communication",8],["r","Topic 2: Utilize a Strategic Structure",8],["r","Topic 3: Know your Audience",2],
+    ["r","Topic 4: Make it Personal",2],["r","Topic 5: Craft Skillful Questions & Listen Intently",5],["r","Topic 6: Communicate with Power",5],["r","Topic 7: Practice Strategic Storytelling",7],
+    ["r","Topic 8: Present Persuasively",9],["r","Topic 9: Maximize Email Effectiveness",4],["r","Topic 10: Legal Aspects of Communication",1],["r","Summary of Chapter 20",1],
+    ["f","Chapter 20 Flashcards",22],["q","Chapter 20 Quiz",46]]},
+  {n:21,practice:true,title:"FPAC Formula Flashcards & Practice Exams",items:[
+    ["f","Platform-wide Formulaic Flashcards",230,180],["q","FPAC Practice Exam: Part 1 (140 Multiple Choice Questions)",280,300],
+    ["q","FPAC Practice Exam: Part 2, Section 1 (45 Task-Based Simulations)",90,180],["q","FPAC Practice Exam: Part 2, Section 2 (10 Case Analysis Scenarios)",68,180]]},
+];
+const STEPS = ["Preview","Question","Read","Reflect","Recite","Review"];
+const DOW = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+const TYPE_LABEL = {r:"Lesson",f:"Flashcards",q:"Quiz"};
+
+const ITEMS = [];
+SYLLABUS.forEach(ch => ch.items.forEach(([t,name,kp,fixed],i) => ITEMS.push({id:`c${ch.n}-${i}`,ch:ch.n,type:t,name,kp,fixed,practice:!!ch.practice})));
+const chLabel = ch => ch.practice ? "Final review" : `Chapter ${ch.n}`;
+const shortCh = it => it.practice ? "Final review" : `Ch ${it.ch}`;
+
+/* ---------- State ---------- */
+const DEFAULT_STATE = () => ({
+  v:1,
+  settings:{exam:"2027-02-26",review:14,mode:"fit",minutes:60,kpMin:5,future:0,days:[true,true,true,true,true,true,true]},
+  items:{"c1-9":{done:true},"c1-10":{done:true}},  // shown as completed on the AFP site
+  open:{}, log:{}
+});
+let state = DEFAULT_STATE();
+let docRef = null, saveTimer = null, loaded = false;
+
+function merge(s){
+  const d = DEFAULT_STATE();
+  if(!s || typeof s!=="object") return d;
+  return {v:1, settings:{...d.settings,...(s.settings||{})}, items:{...(s.items||{})}, open:{...(s.open||{})}, log:{...(s.log||{})}};
+}
+function lsGet(){ try{ const r=localStorage.getItem("fpac-planner-v1"); return r?JSON.parse(r):null; }catch(e){ return null; } }
+function lsSet(){ try{ localStorage.setItem("fpac-planner-v1",JSON.stringify(state)); }catch(e){} }
+
+function setSync(t){ document.getElementById("sync").textContent=t; }
+function save(){
+  lsSet();
+  if(!docRef){ setSync("Saved on this phone"); return; }
+  setSync("Saving…");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async()=>{
+    try{ await docRef.set(JSON.parse(JSON.stringify(state))); setSync("Saved to your account"); }
+    catch(e){ setSync("Couldn't save to your account. Saved in this browser."); }
+  },700);
+}
+
+/* ---------- Dates ---------- */
+const pad = n => String(n).padStart(2,"0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse = s => { const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); };
+const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+const fmt = (d,opt={month:"short",day:"numeric"}) => d.toLocaleDateString("en-US",opt);
+const today = () => { const t=new Date(); return new Date(t.getFullYear(),t.getMonth(),t.getDate()); };
+const daysBetween = (a,b) => Math.round((b-a)/864e5);
+
+/* ---------- Effort model ---------- */
+function baseMin(it){
+  const k = Number(state.settings.kpMin)||5;
+  if(it.fixed) return it.fixed;
+  if(it.type==="r") return Math.max(20, 10 + it.kp*k);
+  if(it.type==="f") return 20 + it.kp*0.6;
+  return 20 + it.kp*1.0;
+}
+function rec(id){ return state.items[id] || (state.items[id]={}); }
+function stepsDone(r){ return (r.steps||[]).filter(Boolean).length; }
+function remaining(it){
+  const r = state.items[it.id]||{}, b = baseMin(it), extra = r.extra||0;
+  if(r.done) return 0;
+  const frac = it.type==="r" ? 1 - stepsDone(r)/6 : 1;
+  return b*frac + extra;
+}
+function statusOf(it){
+  const r = state.items[it.id]||{};
+  if(r.done) return "done";
+  if(r.unsure) return "unsure";
+  if(stepsDone(r)>0) return "prog";
+  return "todo";
+}
+
+/* ---------- Scheduler ---------- */
+function schedule(){
+  const s = state.settings, t0 = today();
+  const exam = parse(s.exam);
+  const reviewStart = addDays(exam, -Math.max(0,Number(s.review)||0));
+  const planned = Math.max(15, Number(s.minutes)||60);
+  const isStudy = d => s.days[d.getDay()];
+  const anyDay = s.days.some(Boolean);
+  const doneToday = Math.max(0, (state.log||{})[iso(t0)]||0);
+  let studyDaysLeft = 0;
+  for(let d=new Date(t0); d<reviewStart; d=addDays(d,1)) if(isStudy(d)) studyDaysLeft++;
+
+  // phase 1: chapters (plus forecast chapters), phase 2: practice exams inside the final review window
+  const queue = ITEMS.filter(it => !it.practice && remaining(it)>0).map(it => ({key:it.id, min:remaining(it)}));
+  const chs = SYLLABUS.filter(c=>!c.practice);
+  const chTotals = chs.map(ch => ITEMS.filter(i=>i.ch===ch.n).reduce((a,i)=>a+baseMin(i),0));
+  const avgCh = chTotals.reduce((a,b)=>a+b,0)/chTotals.length;
+  const fut = Math.max(0,Number(s.future)||0);
+  for(let i=0;i<fut;i++) queue.push({key:`future-${i}`, min:avgCh});
+  const pqueue = ITEMS.filter(it => it.practice && remaining(it)>0).map(it => ({key:it.id, min:remaining(it)}));
+  const totalLeft = queue.reduce((a,q)=>a+q.min,0);
+  // fit mode: spread what's left (plus what you already did today) evenly over the study days before review
+  const fitting = s.mode!=="pace" && studyDaysLeft>0;
+  const cap = fitting ? Math.max(1,(totalLeft + (isStudy(t0)?doneToday:0))/studyDaysLeft)*1.001 : planned;
+
+  const plan = {}, todayKeys = [];
+  let guard = 0;
+  const nextStudy = d => { let x=new Date(d); while(!isStudy(x) && guard++<4000) x=addDays(x,1); return x; };
+  function run(q, startDay, dayCap){
+    let day = nextStudy(startDay), left = dayCap;
+    if(iso(day)===iso(t0)) left = Math.max(0, dayCap - doneToday);
+    for(const it of q){
+      let need = it.min, start = null;
+      while(need>0.01 && guard++<40000){
+        if(left<=0.01){ day = nextStudy(addDays(day,1)); left = dayCap; }
+        if(!start) start = new Date(day);
+        const take = Math.min(need,left); need-=take; left-=take;
+        if(iso(day)===iso(t0) && !todayKeys.includes(it.key)) todayKeys.push(it.key);
+      }
+      plan[it.key] = {start, end:new Date(day)};
+    }
+    return day;
+  }
+  let finish = null, practiceEnd = null;
+  if(anyDay){
+    if(queue.length) finish = run(queue, t0, cap);
+    if(pqueue.length){
+      // practice starts when the review window opens, or after the chapters if they run late
+      let pStart = reviewStart > t0 ? reviewStart : t0;
+      if(finish && finish >= pStart) pStart = addDays(finish,1);
+      // spread practice evenly across the study days left before the exam
+      let pDays = 0; for(let d=new Date(pStart); d<exam; d=addDays(d,1)) if(isStudy(d)) pDays++;
+      const pTotal = pqueue.reduce((a,q)=>a+q.min,0);
+      const pCap = pDays ? Math.max(cap, pTotal/pDays) : cap;
+      practiceEnd = run(pqueue, pStart, pCap);
+    }
+  }
+  return {plan, todayKeys, totalLeft, studyDaysLeft, reviewStart, exam, finish, practiceEnd, cap, planned, fitting, doneToday, anyDay, queueLen:queue.length};
+}
+
+/* ---------- Actions ---------- */
+function logged(id, fn){
+  const it = ITEMS.find(x=>x.id===id), before = remaining(it);
+  fn();
+  const k = iso(today()); state.log = state.log||{};
+  state.log[k] = Math.max(0, (state.log[k]||0) + before - remaining(it));
+  for(const d of Object.keys(state.log)) if(d < iso(addDays(today(),-60))) delete state.log[d];
+}
+function toggleStep(id,i){ logged(id,()=>toggleStep0(id,i)); save(); render(); }
+function markDone(id){ logged(id,()=>markDone0(id)); save(); render(); }
+function markUnsure(id){ logged(id,()=>markUnsure0(id)); save(); render(); }
+function resetItem(id){ logged(id,()=>{ delete state.items[id]; }); save(); render(); }
+function toggleStep0(id,i){
+  const r = rec(id); r.steps = r.steps || [false,false,false,false,false,false];
+  r.steps[i] = !r.steps[i];
+  if(r.steps.every(Boolean) && !r.unsure){ r.done = true; r.doneAt = iso(today()); }
+  else if(!r.steps.every(Boolean)) r.done = false;
+}
+function markDone0(id){
+  const it = ITEMS.find(x=>x.id===id), r = rec(id);
+  r.done = true; r.unsure = false; r.extra = 0; r.doneAt = iso(today());
+  if(it.type==="r") r.steps = [true,true,true,true,true,true];
+}
+function markUnsure0(id){
+  const it = ITEMS.find(x=>x.id===id), r = rec(id);
+  r.done = false; r.unsure = true; r.unsureCount = (r.unsureCount||0)+1;
+  r.extra = (r.extra||0) + baseMin(it)*(it.type==="r"?0.4:0.5);
+  if(it.type==="r" && r.steps){ r.steps[4]=false; r.steps[5]=false; } // redo Recite + Review
+}
+function setScore(id,v){ const r=rec(id); r.score = v===""?undefined:Math.max(0,Math.min(100,Number(v))); save(); }
+function toggleCh(n){ state.open[n] = !isOpen(n); save(); render(); }
+function isOpen(n){ return n in state.open ? state.open[n] : null; }
+
+/* ---------- Render ---------- */
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hm = m => { m=Math.round(m); return m<60?`${m} min`:`${Math.floor(m/60)}h ${pad(m%60)}`; };
+
+function render(){
+  paintBackup();
+  const S = schedule(), t0 = today(), s = state.settings;
+  const total = ITEMS.reduce((a,i)=>a+baseMin(i),0);
+  const doneW = ITEMS.reduce((a,i)=>a + (statusOf(i)==="done"?baseMin(i): i.type==="r"? baseMin(i)*stepsDone(state.items[i.id]||{})/6 : 0),0);
+  const pct = Math.round(doneW/total*100);
+
+  document.getElementById("examLine").textContent = `Exam on ${fmt(S.exam,{weekday:"long",month:"long",day:"numeric",year:"numeric"})} · final review starts ${fmt(S.reviewStart)}`;
+  document.getElementById("sPct").textContent = pct+"%";
+  document.getElementById("sBar").style.width = pct+"%";
+  document.getElementById("sDays").textContent = Math.max(0,daysBetween(t0,S.exam));
+  document.getElementById("sStudyDays").textContent = `${S.studyDaysLeft} study days before review`;
+  const paceNeeded = S.studyDaysLeft ? S.totalLeft/S.studyDaysLeft : Infinity;
+  document.getElementById("sFinish").textContent = S.finish ? fmt(S.finish) : (S.queueLen? "–":"Done");
+  const slack = S.finish ? daysBetween(S.finish,S.reviewStart) : null;
+  document.getElementById("sFinishSub").textContent = S.finish ? (slack>=0? `${slack} days before review` : `${-slack} days into review time`) : "";
+  document.getElementById("sPaceLabel").textContent = S.fitting ? "Daily study time" : "Pace needed";
+  document.getElementById("sPace").textContent = isFinite(paceNeeded)? hm(paceNeeded) : "–";
+  document.getElementById("sPaceSub").textContent = `per study day · you can do ${hm(S.planned)}`;
+  const over = isFinite(paceNeeded) && paceNeeded > S.planned + 1;
+
+  // banner
+  const b = [];
+  if(!S.anyDay) b.push(`<div class="banner warn"><span><b>Pick at least one study day</b> in Plan settings so the plan can be scheduled.</span></div>`);
+  else if(S.fitting && over) b.push(`<div class="banner warn"><span><b>Your dates fit the exam, but it takes ${hm(paceNeeded)} per study day.</b> That's ${hm(paceNeeded - S.planned)} more than the ${hm(S.planned)} you said you can do. Add a study day, shorten the final review, or plan for longer sessions.</span></div>`);
+  else if(S.fitting && S.queueLen) b.push(`<div class="banner good"><span><b>On track.</b> The plan spreads your remaining chapters over ${S.studyDaysLeft} study days, about ${hm(paceNeeded)} each, so you finish before your final review on ${fmt(S.reviewStart)}. It re-balances every time you mark something.</span></div>`);
+  else if(slack!==null && slack<0) b.push(`<div class="banner warn"><span><b>You're ${-slack} days past your review window at this pace.</b> To finish on time, study about ${hm(paceNeeded)} per study day, add a study day, or shorten the final review.</span></div>`);
+  else if(S.practiceEnd && S.practiceEnd >= S.exam) b.push(`<div class="banner warn"><span><b>The practice exams run up to exam day.</b> Add study time or start the final review earlier so you finish them before ${fmt(S.exam)}.</span></div>`);
+  else if(slack!==null && slack>=0 && S.queueLen) b.push(`<div class="banner good"><span><b>On track.</b> At ${hm(S.cap)} per study day you finish all 20 chapters ${slack} days before your final review starts. Practice exams are scheduled inside the review window.</span></div>`);
+  document.getElementById("banner").innerHTML = b.join("");
+  document.getElementById("banner").style.display = b.length? "flex":"none";
+  document.getElementById("banner").style.flexDirection = "column";
+  document.getElementById("banner").style.gap = "8px";
+
+  // today
+  document.getElementById("todayDate").textContent = fmt(t0,{weekday:"long",month:"long",day:"numeric"});
+  const dayGoal = s.days[t0.getDay()] ? Math.min(S.cap, S.totalLeft + S.doneToday) : 0;
+  document.getElementById("todaySum").textContent = dayGoal ? `${hm(S.doneToday)} of ${hm(dayGoal)} done today` + (S.doneToday >= dayGoal-1 ? " · goal met!" : "") : "";
+  const tl = document.getElementById("todayList");
+  if(!s.days[t0.getDay()]) tl.innerHTML = `<p class="empty">Rest day. Nothing scheduled today.</p>`;
+  else if(!S.todayKeys.length) tl.innerHTML = `<p class="empty">Today's goal is done. Nice work!</p>`;
+  else tl.innerHTML = S.todayKeys.map(k=>{
+    const it = ITEMS.find(x=>x.id===k);
+    if(!it) return `<li><span>Forecast chapter<small>Not added yet</small></span></li>`;
+    const st = statusOf(it);
+    const nextStep = it.type==="r" ? (()=>{ const st=state.items[k]?.steps||[]; const i=STEPS.findIndex((_,j)=>!st[j]); return i<0?"Review":STEPS[i]; })() : TYPE_LABEL[it.type];
+    return `<li><span>${esc(it.name)}<small>${shortCh(it)} · ${st==="unsure"?"Re-study":"Next: "+nextStep}</small></span><span class="mono" style="font-size:12px">${hm(remaining(it))}</span></li>`;
+  }).join("");
+  const nextIt = ITEMS.find(it => remaining(it)>0 && !S.todayKeys.includes(it.id));
+  document.getElementById("upNext").textContent = nextIt ? `Next up: ${nextIt.name} (${shortCh(nextIt)}), planned by ${fmt(S.plan[nextIt.id].end)}` : "";
+
+  // chapters
+  const firstOpen = (SYLLABUS.find(ch=>ITEMS.some(i=>i.ch===ch.n && remaining(i)>0))||{}).n;
+  const html = SYLLABUS.map(ch=>{
+    const its = ITEMS.filter(i=>i.ch===ch.n);
+    const chT = its.reduce((a,i)=>a+baseMin(i),0);
+    const chD = its.reduce((a,i)=>a + (statusOf(i)==="done"?baseMin(i): i.type==="r"? baseMin(i)*stepsDone(state.items[i.id]||{})/6:0),0);
+    const cp = Math.round(chD/chT*100);
+    const kp = its.reduce((a,i)=>a+i.kp,0);
+    const ends = its.map(i=>S.plan[i.id]?.end).filter(Boolean);
+    const chEnd = ends.length? new Date(Math.max(...ends)) : null;
+    const open = isOpen(ch.n) ?? (ch.n===firstOpen);
+    const unsure = its.filter(i=>statusOf(i)==="unsure").length;
+    return `<section class="chapter${open?" open":""}">
+      <button class="ch-head" type="button" aria-expanded="${open}" data-ch="${ch.n}">
+        <span class="ch-title"><span class="eyebrow">${chLabel(ch)}</span><h3 style="font-size:17px">${esc(ch.title)}</h3>
+          <span class="ch-meta">${its.length} items · ${kp} knowledge points${unsure?` · ${unsure} to revisit`:""} · ${chEnd?`planned done by <span class="mono">${fmt(chEnd)}</span>`:"complete"}</span></span>
+        <span class="ch-right"><span class="ring" style="--p:${cp}"><span>${cp}%</span></span><svg class="chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </button>
+      ${open?`<div class="items">${its.map(it=>itemHTML(it,S)).join("")}</div>`:""}
+    </section>`;
+  }).join("");
+  const fut = Math.max(0,Number(s.future)||0);
+  const futHTML = Array.from({length:fut},(_,i)=>{
+    const p = S.plan[`future-${i}`];
+    return `<div class="ph"><span>Chapter ${SYLLABUS.length+i+1} · not added yet (forecast)</span><span class="mono">${p?"by "+fmt(p.end):""}</span></div>`;
+  }).join("");
+  document.getElementById("chapters").innerHTML = `<div class="legend"><span>PQ4R: tap each step as you finish it</span><span>Done = mastered</span><span>Unsure = adds re-study time and pushes the plan</span></div>` + html + futHTML;
+}
+
+function itemHTML(it,S){
+  const r = state.items[it.id]||{}, st = statusOf(it), p = S.plan[it.id];
+  const pill = st==="done"?`<span class="pill done">Done</span>`: st==="unsure"?`<span class="pill unsure">Revisit${r.unsureCount>1?" ×"+r.unsureCount:""}</span>`: st==="prog"?`<span class="pill prog">${stepsDone(r)}/6</span>`:"";
+  const target = st==="done" ? `<label class="target donedate"><small>Completed on</small><input type="date" id="done-${it.id}" data-doneat="${it.id}" value="${r.doneAt||""}" max="${iso(today())}" aria-label="Completed date for ${esc(it.name)}"></label>`
+    : p ? `<div class="target">${fmt(p.end,{weekday:"short",month:"short",day:"numeric"})}<small>target · ${hm(remaining(it))} left</small></div>` : "";
+  const steps = it.type==="r" ? STEPS.map((nm,i)=>`<button type="button" class="step" aria-pressed="${!!(r.steps&&r.steps[i])}" data-step="${it.id}|${i}"><span class="k">${i+1}</span>${nm}</button>`).join("") : "";
+  const score = it.type==="q" ? `<label class="score">Score %<input type="number" min="0" max="100" id="score-${it.id}" data-score="${it.id}" value="${r.score??""}"></label>` : "";
+  const acts = st==="done"
+    ? `<button type="button" class="btn unsure" data-unsure="${it.id}">Unsure</button><button type="button" class="btn ghost" data-reset="${it.id}">Reset</button>`
+    : `<button type="button" class="btn ok" data-done="${it.id}">Done</button><button type="button" class="btn unsure" data-unsure="${it.id}">Unsure</button>${(st!=="todo")?`<button type="button" class="btn ghost" data-reset="${it.id}">Reset</button>`:""}`;
+  return `<div class="item is-${st}">
+    <div><div class="it-name">${esc(it.name)} ${pill}</div><div class="it-sub"><span>${TYPE_LABEL[it.type]}</span><span>${it.kp} KP</span><span>~${hm(baseMin(it))}${r.extra?` + ${hm(r.extra)} re-study`:""}</span></div></div>
+    ${target}
+    <div class="steps">${steps}${score}<span class="acts">${acts}</span></div>
+  </div>`;
+}
+
+/* ---------- Events ---------- */
+document.getElementById("chapters").addEventListener("click",e=>{
+  const t = e.target.closest("button"); if(!t) return;
+  if(t.dataset.ch) return toggleCh(Number(t.dataset.ch));
+  if(t.dataset.step){ const [id,i]=t.dataset.step.split("|"); return toggleStep(id,Number(i)); }
+  if(t.dataset.done) return markDone(t.dataset.done);
+  if(t.dataset.unsure) return markUnsure(t.dataset.unsure);
+  if(t.dataset.reset) return resetItem(t.dataset.reset);
+});
+document.getElementById("chapters").addEventListener("change",e=>{
+  if(e.target.dataset.score) setScore(e.target.dataset.score, e.target.value);
+  if(e.target.dataset.doneat){ const r = rec(e.target.dataset.doneat); if(e.target.value) r.doneAt = e.target.value; else delete r.doneAt; save(); }
+});
+
+function bindSettings(){
+  const s = state.settings;
+  const f = {exam:"exam",review:"review",minutes:"minutes",kpMin:"kpMin",future:"future"};
+  for(const [k,id] of Object.entries(f)){
+    const el = document.getElementById(id); el.value = s[k];
+    el.onchange = () => { if(el.value==="") return; s[k] = el.type==="date"? el.value : Number(el.value); save(); render(); };
+  }
+  const md = document.getElementById("modes");
+  const paintModes = () => md.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String((s.mode||"fit")===b.dataset.m)));
+  paintModes();
+  md.onclick = e => { const b=e.target.closest("button"); if(!b) return; s.mode=b.dataset.m; paintModes(); save(); render(); };
+  const dd = document.getElementById("days");
+  dd.innerHTML = DOW.map((d,i)=>`<button type="button" aria-pressed="${s.days[i]}" data-d="${i}" aria-label="${["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][i]}">${d}</button>`).join("");
+  dd.onclick = e => { const b=e.target.closest("button"); if(!b) return; const i=Number(b.dataset.d); s.days[i]=!s.days[i]; b.setAttribute("aria-pressed",s.days[i]); save(); render(); };
+}
+
+/* ---------- Backup ---------- */
+const backupText = () => JSON.stringify({app:"fpac-planner",v:1,state});
+function paintBackup(){ const t=document.getElementById("backupText"); if(t) t.value = backupText(); }
+let restoreArmed = false;
+document.getElementById("copyBk").onclick = () => {
+  const ta = document.getElementById("backupText"), msg = document.getElementById("bkMsg");
+  ta.value = backupText(); ta.focus(); ta.select();
+  const done = ok => msg.textContent = ok ? "Copied. Paste it into a private note to keep it safe." : "Select the text above and copy it by hand.";
+  try{ navigator.clipboard.writeText(ta.value).then(()=>done(true),()=>done(false)); }catch(e){ done(false); }
+};
+document.getElementById("restoreBk").onclick = e => {
+  const msg = document.getElementById("bkMsg"), btn = e.currentTarget;
+  let o; try{ o = JSON.parse(document.getElementById("restoreText").value.trim()); }catch(err){ o = null; }
+  if(!o || o.app!=="fpac-planner" || !o.state){ msg.textContent = "That doesn't look like an FPAC planner backup. Paste the whole text you copied."; return; }
+  if(!restoreArmed){ restoreArmed = true; btn.textContent = "Tap again to replace"; msg.textContent = "This replaces the progress on this device with the backup."; return; }
+  restoreArmed = false; btn.textContent = "Replace my progress";
+  state = merge(o.state); save(); bindSettings(); render();
+  document.getElementById("restoreText").value = "";
+  msg.textContent = "Restored. Your plan has been updated.";
+};
+
+/* ---------- Pages ---------- */
+document.querySelector(".tabbar").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if(!b) return;
+  const v = b.dataset.view;
+  document.getElementById("view-plan").hidden = v!=="plan";
+  document.getElementById("view-settings").hidden = v!=="settings";
+  document.querySelectorAll(".tab").forEach(t => t.dataset.view===v ? t.setAttribute("aria-current","page") : t.removeAttribute("aria-current"));
+  window.scrollTo(0,0);
+});
+
+/* ---------- Boot ---------- */
+state = merge(lsGet());
+bindSettings(); render();
+
+setSync(lsGet()?"Saved on this phone":"Progress saves on this phone");
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+setInterval(()=>{ render(); }, 60*60*1000); // roll the plan over at day change
+</script>
+
+</body>
+</html>
